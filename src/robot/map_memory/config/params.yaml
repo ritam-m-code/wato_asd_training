@@ -1,3 +1,16 @@
-# map_memory_node:
-#   ros__parameters:
-    
+map_memory_node:
+  ros__parameters:
+    # Matches the costmap resolution so fusion is a straight cell-to-cell copy.
+    resolution: 0.1
+    # 300 x 300 cells at 0.1m = 30m x 30m, exactly covering the walled arena
+    # (walls sit at +/-15m on both axes).
+    width: 300
+    height: 300
+    origin_x: -15.0
+    origin_y: -15.0
+    # odometry_spoof reports poses in the simulation world frame.
+    frame_id: "sim_world"
+    # Metres of travel between fusions. Lower fills the map faster but costs CPU.
+    update_distance: 1.5
+    # Hz. Republished continuously so the planner always has a map.
+    publish_rate: 1.0

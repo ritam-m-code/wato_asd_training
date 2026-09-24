@@ -1,3 +1,13 @@
-# control_node:
-#   ros__parameters:
-    
+control_node:
+  ros__parameters:
+    # Metres ahead on the path to aim for. Shorter tracks the path more tightly
+    # but oscillates; longer is smoother but cuts corners.
+    lookahead_distance: 1.5
+    # Metres per second along the path, before the turn-rate reduction.
+    linear_speed: 0.5
+    # Radians per second ceiling on the yaw command.
+    max_angular: 1.0
+    # Matches the planner tolerance so both agree on when the goal is reached.
+    goal_tolerance: 0.5
+    # Hz. Runs faster than the 1 Hz replan so steering stays smooth between paths.
+    control_rate: 10.0

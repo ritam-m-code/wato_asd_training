@@ -1,3 +1,14 @@
-# costmap_node:
-#   ros__parameters:
-
+costmap_node:
+  ros__parameters:
+    # Metres per cell. Matched to the global map so fusion needs no resampling.
+    resolution: 0.1
+    # 200 x 200 cells at 0.1m = a 20m x 20m window centred on the robot.
+    width: 200
+    height: 200
+    # Roughly the chassis half-length (1.0m) plus margin. Also wide enough to
+    # close the ~0.25m gap between adjacent lidar beams at range.
+    inflation_radius: 1.2
+    max_cost: 100
+    # The lidar reaches 20m but the arena is only 30m across; clamping keeps the
+    # local window meaningful.
+    max_range: 10.0
