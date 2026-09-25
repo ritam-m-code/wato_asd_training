@@ -1,13 +1,17 @@
 control_node:
   ros__parameters:
     # Metres ahead on the path to aim for. Longer is smoother but cuts corners,
-    # and corner-cutting eats the clearance the planner reserved. 1.0m tracks
-    # tightly enough to stay inside that margin at 0.5m/s.
-    lookahead_distance: 1.0
-    # Metres per second along the path, before the turn-rate reduction.
-    linear_speed: 0.5
-    # Radians per second ceiling on the yaw command.
-    max_angular: 1.0
+    # and corner-cutting eats the clearance the planner reserved. Pure pursuit
+    # wants this to scale with speed -- roughly 1.8s of travel -- so it moves in
+    # step with linear_speed rather than being tuned independently.
+    lookahead_distance: 1.8
+    # Metres per second along the path, before the turn-rate reduction. The
+    # diff-drive plugin declares no velocity ceiling, so this is limited by how
+    # well the controller tracks rather than by the robot.
+    linear_speed: 1.0
+    # Radians per second ceiling on the yaw command. Raised with linear_speed so
+    # the robot can still come round inside the same turning radius.
+    max_angular: 1.5
     # Deliberately TIGHTER than the planner's 0.5m. The controller stops relative
     # to the last path point while the planner measures to the true goal, and the
     # path end is quantised to a cell centre. If the two tolerances matched, the

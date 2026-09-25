@@ -11,6 +11,8 @@ map_memory_node:
     # odometry_spoof reports poses in the simulation world frame.
     frame_id: "sim_world"
     # Metres of travel between fusions. Lower fills the map faster but costs CPU.
-    update_distance: 1.5
+    # Tightened alongside the speed increase so the global map does not lag the
+    # robot by more than about a second of travel.
+    update_distance: 1.0
     # Hz. Republished continuously so the planner always has a map.
     publish_rate: 1.0

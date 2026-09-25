@@ -9,8 +9,10 @@ planner_node:
     # How strongly the decaying outer band is avoided. 0 plans the shortest path
     # regardless of clearance; higher takes wider berths around obstacles.
     cost_weight: 2.0
-    # Seconds between replans while driving to a goal.
-    replan_period: 1.0
+    # Seconds between replans while driving to a goal. At 1.0m/s the robot
+    # covers a metre per replan, so this halves to keep it from committing too
+    # far ahead on stale information. A* over this grid is cheap.
+    replan_period: 0.5
     # odom/filtered reports the lidar frame, which sits this far ahead of the
     # chassis centre. Plan for the centre so the whole body clears obstacles.
     base_offset: 0.8
