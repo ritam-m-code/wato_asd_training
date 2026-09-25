@@ -7,11 +7,13 @@ CostmapNode::CostmapNode() : Node("costmap"), costmap_(robot::CostmapCore(this->
   const double resolution = this->declare_parameter<double>("resolution", 0.1);
   const int width = this->declare_parameter<int>("width", 200);
   const int height = this->declare_parameter<int>("height", 200);
-  const double inflation_radius = this->declare_parameter<double>("inflation_radius", 1.2);
+  const double robot_radius = this->declare_parameter<double>("robot_radius", 1.15);
+  const double inflation_radius = this->declare_parameter<double>("inflation_radius", 2.0);
   const int max_cost = this->declare_parameter<int>("max_cost", 100);
   const double max_range = this->declare_parameter<double>("max_range", 10.0);
 
-  costmap_.configure(resolution, width, height, inflation_radius, max_cost, max_range);
+  costmap_.configure(resolution, width, height, robot_radius, inflation_radius,
+                     max_cost, max_range);
 
   costmap_pub_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>("/costmap", 10);
   scan_sub_ = this->create_subscription<sensor_msgs::msg::LaserScan>(

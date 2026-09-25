@@ -26,6 +26,8 @@ class ControlNode : public rclcpp::Node {
     rclcpp::TimerBase::SharedPtr timer_;
 
     bool have_odom_;
+    // Distance from the reported odom frame back to the chassis centre.
+    double base_offset_;
     nav_msgs::msg::Path path_;
     double robot_x_;
     double robot_y_;

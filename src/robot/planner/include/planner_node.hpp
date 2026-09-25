@@ -41,6 +41,8 @@ class PlannerNode : public rclcpp::Node {
     rclcpp::TimerBase::SharedPtr timer_;
 
     double goal_tolerance_;
+    // Distance from the reported odom frame back to the chassis centre.
+    double base_offset_;
 
     State state_;
     bool have_map_;

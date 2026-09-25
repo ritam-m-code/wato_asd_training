@@ -2,12 +2,15 @@ planner_node:
   ros__parameters:
     # Metres from the goal at which the robot is considered to have arrived.
     goal_tolerance: 0.5
-    # Cells at or above this cost are impassable. Inflation peaks at 100 on the
-    # obstacle itself, so 80 blocks the obstacle and its immediate surround while
-    # leaving the outer falloff merely expensive.
+    # Cells at or above this cost are impassable. Combined with the costmap's
+    # lethal core this blocks everything within ~1.32m of an obstacle, which
+    # covers the chassis circumscribed radius of 1.12m with margin to spare.
     occupancy_threshold: 80
-    # How strongly inflated cells are avoided. 0 ignores cost entirely and plans
-    # the shortest path; higher values hug walls less and take wider berths.
+    # How strongly the decaying outer band is avoided. 0 plans the shortest path
+    # regardless of clearance; higher takes wider berths around obstacles.
     cost_weight: 2.0
     # Seconds between replans while driving to a goal.
     replan_period: 1.0
+    # odom/filtered reports the lidar frame, which sits this far ahead of the
+    # chassis centre. Plan for the centre so the whole body clears obstacles.
+    base_offset: 0.8

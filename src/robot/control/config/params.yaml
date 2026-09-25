@@ -7,7 +7,14 @@ control_node:
     linear_speed: 0.5
     # Radians per second ceiling on the yaw command.
     max_angular: 1.0
-    # Matches the planner tolerance so both agree on when the goal is reached.
-    goal_tolerance: 0.5
-    # Hz. Runs faster than the 1 Hz replan so steering stays smooth between paths.
+    # Deliberately TIGHTER than the planner's 0.5m. The controller stops relative
+    # to the last path point while the planner measures to the true goal, and the
+    # path end is quantised to a cell centre. If the two tolerances matched, the
+    # robot could park just outside the planner's threshold and sit there while
+    # it replanned forever.
+    goal_tolerance: 0.25
+    # Hz. Runs faster than the 1Hz replan so steering stays smooth between paths.
     control_rate: 10.0
+    # Steer the chassis centre, not the lidar that odom/filtered reports. The
+    # centre is still ahead of the wheel axle, which keeps pure pursuit damped.
+    base_offset: 0.8

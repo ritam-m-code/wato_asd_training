@@ -1,4 +1,5 @@
 #include <chrono>
+#include <cmath>
 #include <memory>
 
 #include "tf2/utils.h"
@@ -19,6 +20,7 @@ ControlNode::ControlNode()
   const double max_angular = this->declare_parameter<double>("max_angular", 1.0);
   const double goal_tolerance = this->declare_parameter<double>("goal_tolerance", 0.5);
   const double control_rate = this->declare_parameter<double>("control_rate", 10.0);
+  base_offset_ = this->declare_parameter<double>("base_offset", 0.8);
 
   control_.configure(lookahead_distance, linear_speed, max_angular, goal_tolerance);
 
@@ -43,9 +45,12 @@ void ControlNode::pathCallback(const nav_msgs::msg::Path::SharedPtr path)
 
 void ControlNode::odomCallback(const nav_msgs::msg::Odometry::SharedPtr odom)
 {
-  robot_x_ = odom->pose.pose.position.x;
-  robot_y_ = odom->pose.pose.position.y;
   robot_yaw_ = tf2::getYaw(odom->pose.pose.orientation);
+  // Steer the chassis centre rather than the lidar, which sits base_offset_
+  // ahead of it. The centre is still forward of the wheel axle, which keeps
+  // pure pursuit well damped.
+  robot_x_ = odom->pose.pose.position.x - base_offset_ * std::cos(robot_yaw_);
+  robot_y_ = odom->pose.pose.position.y - base_offset_ * std::sin(robot_yaw_);
   have_odom_ = true;
 }
 

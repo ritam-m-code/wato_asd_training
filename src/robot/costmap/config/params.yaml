@@ -5,9 +5,14 @@ costmap_node:
     # 200 x 200 cells at 0.1m = a 20m x 20m window centred on the robot.
     width: 200
     height: 200
-    # Roughly the chassis half-length (1.0m) plus margin. Also wide enough to
-    # close the ~0.25m gap between adjacent lidar beams at range.
-    inflation_radius: 1.2
+    # Circumscribed radius of the chassis measured from the control point (the
+    # chassis centre): half-length 1.0m, half-width 0.5m -> 1.12m. Cells within
+    # this distance of an obstacle are lethal, because the body would be in them.
+    robot_radius: 1.15
+    # Beyond the lethal core the cost decays to zero at this distance, which
+    # steers the planner towards the middle of a gap without forbidding tight
+    # but legal routes.
+    inflation_radius: 2.0
     max_cost: 100
     # The lidar reaches 20m but the arena is only 30m across; clamping keeps the
     # local window meaningful.

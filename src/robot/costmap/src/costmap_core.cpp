@@ -11,18 +11,21 @@ CostmapCore::CostmapCore(const rclcpp::Logger& logger)
   resolution_(0.1),
   width_(200),
   height_(200),
-  inflation_radius_(1.2),
+  robot_radius_(1.15),
+  inflation_radius_(2.0),
   max_cost_(100),
   max_range_(10.0),
-  inflation_cells_(12) {}
+  inflation_cells_(20) {}
 
 void CostmapCore::configure(double resolution, int width, int height,
-                            double inflation_radius, int max_cost, double max_range)
+                            double robot_radius, double inflation_radius,
+                            int max_cost, double max_range)
 {
   resolution_ = resolution;
   width_ = width;
   height_ = height;
-  inflation_radius_ = inflation_radius;
+  robot_radius_ = robot_radius;
+  inflation_radius_ = std::max(inflation_radius, robot_radius + resolution);
   max_cost_ = max_cost;
   max_range_ = max_range;
   inflation_cells_ = static_cast<int>(std::ceil(inflation_radius_ / resolution_));
@@ -38,8 +41,9 @@ void CostmapCore::configure(double resolution, int width, int height,
   grid_.info.origin.orientation.w = 1.0;
   grid_.data.assign(static_cast<size_t>(width_) * static_cast<size_t>(height_), -1);
 
-  RCLCPP_INFO(logger_, "Costmap configured: %dx%d cells at %.2fm, inflation %.2fm (%d cells)",
-              width_, height_, resolution_, inflation_radius_, inflation_cells_);
+  RCLCPP_INFO(logger_,
+              "Costmap configured: %dx%d cells at %.2fm, lethal core %.2fm, inflation %.2fm (%d cells)",
+              width_, height_, resolution_, robot_radius_, inflation_radius_, inflation_cells_);
 }
 
 void CostmapCore::reset()
@@ -183,11 +187,19 @@ void CostmapCore::inflate()
           continue;  // the window is square, the falloff is circular
         }
 
-        // Linear falloff from max_cost at the obstacle to 0 at the radius.
-        // Unknown cells are lifted too: proximity to an obstacle is a hazard
-        // whether or not we have seen what is there.
-        const int8_t cost =
-          static_cast<int8_t>(max_cost_ * (1.0 - distance / inflation_radius_));
+        // Anything the robot body would occupy is lethal, not merely expensive.
+        // The chassis circumscribed radius measured from the control point is
+        // ~1.12m, so a path grazing an obstacle at 0.3m would drag the body
+        // through it. Beyond that core the cost decays, which steers the planner
+        // towards the middle of a gap without forbidding a tight but legal one.
+        int8_t cost;
+        if (distance <= robot_radius_) {
+          cost = static_cast<int8_t>(max_cost_);
+        } else {
+          const double decay =
+            1.0 - (distance - robot_radius_) / (inflation_radius_ - robot_radius_);
+          cost = static_cast<int8_t>(max_cost_ * decay);
+        }
 
         int8_t & cell = grid_.data[index(nx, ny)];
         if (cost > cell) {

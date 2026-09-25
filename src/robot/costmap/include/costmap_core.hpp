@@ -31,7 +31,8 @@ class CostmapCore {
 
     // Sizes the grid and precomputes the inflation window. Call once at startup.
     void configure(double resolution, int width, int height,
-                   double inflation_radius, int max_cost, double max_range);
+                   double robot_radius, double inflation_radius,
+                   int max_cost, double max_range);
 
     // Rebuilds the grid from the scan. The returned grid has its geometry filled
     // in but an empty header; the caller stamps it before publishing.
@@ -55,6 +56,9 @@ class CostmapCore {
     double resolution_;
     int width_;
     int height_;
+    // Cells within this distance of an obstacle are lethal: the robot body
+    // would occupy them. Beyond it, up to inflation_radius_, cost decays.
+    double robot_radius_;
     double inflation_radius_;
     int max_cost_;
     double max_range_;

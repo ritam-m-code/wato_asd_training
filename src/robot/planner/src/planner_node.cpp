@@ -2,6 +2,9 @@
 #include <cmath>
 #include <memory>
 
+#include "tf2/utils.h"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
+
 #include "planner_node.hpp"
 
 PlannerNode::PlannerNode()
@@ -18,6 +21,7 @@ PlannerNode::PlannerNode()
   const int occupancy_threshold = this->declare_parameter<int>("occupancy_threshold", 80);
   const double cost_weight = this->declare_parameter<double>("cost_weight", 2.0);
   goal_tolerance_ = this->declare_parameter<double>("goal_tolerance", 0.5);
+  base_offset_ = this->declare_parameter<double>("base_offset", 0.8);
   const double replan_period = this->declare_parameter<double>("replan_period", 1.0);
 
   planner_.configure(occupancy_threshold, cost_weight);
@@ -49,8 +53,13 @@ void PlannerNode::mapCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr map)
 
 void PlannerNode::odomCallback(const nav_msgs::msg::Odometry::SharedPtr odom)
 {
-  robot_x_ = odom->pose.pose.position.x;
-  robot_y_ = odom->pose.pose.position.y;
+  // odom/filtered reports the lidar frame, which sits base_offset_ ahead of the
+  // chassis centre, with most of the body trailing behind it. Planning for that
+  // point lets the rear of the robot clip obstacles the path appeared to clear,
+  // so shift back to the centre of the chassis before planning.
+  const double yaw = tf2::getYaw(odom->pose.pose.orientation);
+  robot_x_ = odom->pose.pose.position.x - base_offset_ * std::cos(yaw);
+  robot_y_ = odom->pose.pose.position.y - base_offset_ * std::sin(yaw);
   have_odom_ = true;
 }
 
