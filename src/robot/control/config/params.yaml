@@ -1,8 +1,9 @@
 control_node:
   ros__parameters:
-    # Metres ahead on the path to aim for. Shorter tracks the path more tightly
-    # but oscillates; longer is smoother but cuts corners.
-    lookahead_distance: 1.5
+    # Metres ahead on the path to aim for. Longer is smoother but cuts corners,
+    # and corner-cutting eats the clearance the planner reserved. 1.0m tracks
+    # tightly enough to stay inside that margin at 0.5m/s.
+    lookahead_distance: 1.0
     # Metres per second along the path, before the turn-rate reduction.
     linear_speed: 0.5
     # Radians per second ceiling on the yaw command.

@@ -16,7 +16,7 @@ constexpr double kDiagonalStep = 1.41421356237;
 }
 
 PlannerCore::PlannerCore(const rclcpp::Logger& logger)
-: logger_(logger), occupancy_threshold_(80), cost_weight_(2.0) {}
+: logger_(logger), occupancy_threshold_(80), cost_weight_(2.0), escape_penalty_(25.0) {}
 
 void PlannerCore::configure(int occupancy_threshold, double cost_weight)
 {
@@ -95,9 +95,16 @@ bool PlannerCore::planPath(const nav_msgs::msg::OccupancyGrid & map,
     return false;
   }
 
-  // The start cell is deliberately never tested for traversability. Inflation
-  // easily covers the robot own cell when it passes close to a wall, and
-  // refusing to plan in that case would strand it.
+  // If the robot has ended up inside lethal space -- nudged by a controller
+  // overshoot, or an obstacle mapped after it drove past -- every neighbour is
+  // lethal too and a strict search expands nothing, reports failure, and leaves
+  // the robot grinding against whatever it hit. When that happens, allow the
+  // search to cross lethal cells at a punitive cost so it can find its way out.
+  const bool escaping = !isTraversable(map, start);
+  if (escaping) {
+    RCLCPP_WARN(logger_, "Start (%.2f, %.2f) is inside lethal space; planning an escape",
+                start_x, start_y);
+  }
 
   std::priority_queue<AStarNode, std::vector<AStarNode>, CompareF> open;
   std::unordered_map<CellIndex, double, CellIndexHash> g_score;
@@ -138,12 +145,23 @@ bool PlannerCore::planPath(const nav_msgs::msg::OccupancyGrid & map,
         }
 
         const CellIndex neighbour(current.index.x + dx, current.index.y + dy);
-        if (!isTraversable(map, neighbour) || closed.count(neighbour)) {
+        if (closed.count(neighbour)) {
+          continue;
+        }
+        if (neighbour.x < 0 || neighbour.x >= static_cast<int>(map.info.width) ||
+            neighbour.y < 0 || neighbour.y >= static_cast<int>(map.info.height)) {
+          continue;
+        }
+
+        const bool passable = isTraversable(map, neighbour);
+        if (!passable && !escaping) {
           continue;
         }
 
         const double step = (dx != 0 && dy != 0) ? kDiagonalStep : 1.0;
-        const double tentative_g = current_g + step * cellPenalty(map, neighbour);
+        const double penalty =
+          cellPenalty(map, neighbour) * (passable ? 1.0 : escape_penalty_);
+        const double tentative_g = current_g + step * penalty;
 
         const auto existing = g_score.find(neighbour);
         if (existing != g_score.end() && tentative_g >= existing->second) {

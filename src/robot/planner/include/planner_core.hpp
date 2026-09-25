@@ -84,6 +84,9 @@ class PlannerCore {
 
     int occupancy_threshold_;
     double cost_weight_;
+    // Multiplier applied to lethal cells when the robot starts inside one. It
+    // has to be large enough that escaping is always preferred to loitering.
+    double escape_penalty_;
 };
 
 }

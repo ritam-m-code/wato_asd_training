@@ -112,8 +112,11 @@ void PlannerNode::replan()
   path.header.frame_id = map_.header.frame_id;
 
   if (!planner_.planPath(map_, robot_x_, robot_y_, goal_x_, goal_y_, path)) {
-    // Hold the previous path rather than publishing a broken one. If the goal is
-    // genuinely unreachable the controller will finish the old path and stop.
+    // Publish an empty path so the controller stops. Holding the previous path
+    // is actively dangerous: if planning failed because the robot is pressed
+    // against an obstacle, the stale path points straight into it and the robot
+    // grinds there indefinitely.
+    publishEmptyPath();
     return;
   }
 

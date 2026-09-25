@@ -6,13 +6,14 @@ costmap_node:
     width: 200
     height: 200
     # Circumscribed radius of the chassis measured from the control point (the
-    # chassis centre): half-length 1.0m, half-width 0.5m -> 1.12m. Cells within
-    # this distance of an obstacle are lethal, because the body would be in them.
-    robot_radius: 1.15
+    # chassis centre) is 1.12m. Carrying 0.13m on top absorbs the corner-cutting
+    # pure pursuit does on tight turns, which is what put the chassis in contact
+    # with a cylinder when this was set to exactly the chassis radius.
+    robot_radius: 1.25
     # Beyond the lethal core the cost decays to zero at this distance, which
     # steers the planner towards the middle of a gap without forbidding tight
     # but legal routes.
-    inflation_radius: 2.0
+    inflation_radius: 2.2
     max_cost: 100
     # The lidar reaches 20m but the arena is only 30m across; clamping keeps the
     # local window meaningful.
